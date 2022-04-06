@@ -1,0 +1,34 @@
+{
+  "name": "prototune-server",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --inspect -r dotenv/config src/server.js",
+    "lint": "npx eslint ./src || exit 0",
+    "lint:fix": "npx eslint ./src --fix || exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.lnu.se:1dv613/student/as227cw/projects/prototune-server"
+  },
+  "contributors": [
+    "Adrian Shosholli <as227cw@student.lnu.se>"
+  ],
+  "author": "",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "ws": "^8.5.0"
+  },
+  "devDependencies": {
+    "@lnu/eslint-config": "^1.1.4",
+    "dotenv": "^16.0.0",
+    "nodemon": "^2.0.15"
+  },
+  "eslintConfig": {
+    "extends": "@lnu"
+  }
+}
