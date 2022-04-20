@@ -1,8 +1,12 @@
 import WebSocket, { WebSocketServer } from 'ws'
 
 try {
-  const wss = new WebSocketServer({ port: 8080 })
+  const wss = new WebSocketServer({ port: process.env.PORT })
+
+  const storage = {}
+
   wss.on('connection', function connection (ws) {
+    ws.send(Buffer.from(JSON.stringify({ action: 'note-import', notes: storage })))
     ws.on('message', function message (data) {
       wss.clients.forEach(function each (client) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -10,6 +14,23 @@ try {
         }
       })
       console.log('received: %s', data)
+      const message = JSON.parse(data)
+      if (message.action === 'note-create') {
+        storage[message.note.uuid] = {
+          x: message.note.x,
+          y: message.note.y,
+          length: message.note.length
+        }
+      } else if (message.action === 'note-remove') {
+        delete storage[message.note.uuid]
+      } else if (message.action === 'note-update') {
+        for (const [key, value] of Object.entries(message.changes)) {
+          if (key !== 'uuid') {
+            storage[message.changes.uuid][key] = value
+          }
+        }
+      }
+      console.log(storage)
     })
   })
 } catch (err) {
