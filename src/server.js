@@ -16,17 +16,29 @@ try {
       console.log('received: %s', data)
       const message = JSON.parse(data)
       if (message.action === 'note-create') {
-        storage[message.note.uuid] = {
-          x: message.note.x,
-          y: message.note.y,
-          length: message.note.length
+        if (storage[message.roll]) {
+          storage[message.roll][message.note.uuid] = {
+            x: message.note.x,
+            y: message.note.y,
+            length: message.note.length
+          }
+        } else {
+          storage[message.roll] = {
+            [message.note.uuid]: {
+              x: message.note.x,
+              y: message.note.y,
+              length: message.note.length
+            }
+          }
         }
       } else if (message.action === 'note-remove') {
-        delete storage[message.note.uuid]
+        if (storage[message.roll][message.note.uuid]) {
+          delete storage[message.roll][message.note.uuid]
+        }
       } else if (message.action === 'note-update') {
         for (const [key, value] of Object.entries(message.changes)) {
           if (key !== 'uuid') {
-            storage[message.changes.uuid][key] = value
+            storage[message.roll][message.changes.uuid][key] = value
           }
         }
       }
