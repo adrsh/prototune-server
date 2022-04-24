@@ -17,10 +17,20 @@ try {
       console.log('received: %s', data)
       const message = JSON.parse(data)
       if (message.action === 'note-create') {
-        storage[message.roll][message.note.uuid] = {
-          x: message.note.x,
-          y: message.note.y,
-          length: message.note.length
+        if (storage[message.roll]) {
+          storage[message.roll][message.note.uuid] = {
+            x: message.note.x,
+            y: message.note.y,
+            length: message.note.length
+          }
+        } else {
+          storage[message.roll] = {
+            [message.note.uuid]: {
+              x: message.note.x,
+              y: message.note.y,
+              length: message.note.length
+            }
+          }
         }
       } else if (message.action === 'note-remove') {
         if (storage[message.roll][message.note.uuid]) {
