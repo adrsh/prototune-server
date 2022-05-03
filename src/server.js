@@ -22,7 +22,7 @@ try {
           ws.id = message.id
           // Eller både och? Då vet man ju vilken session som ws-objektet är förknippad med.
           ws.send(JSON.stringify({
-            action: 'session-start'
+            action: 'session-authenticated'
           }))
         } else {
           ws.send(JSON.stringify({
@@ -35,8 +35,7 @@ try {
         clients[uuid] = []
         ws.id = uuid
         ws.send(JSON.stringify({
-          id: uuid,
-          url: `http://localhost:3000/?${uuid}`
+          'session-id': uuid
         }))
       }
     })
