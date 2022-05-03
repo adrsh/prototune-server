@@ -5,10 +5,6 @@ try {
   const wss = new WebSocketServer({ port: process.env.PORT })
 
   const sessions = {}
-
-  const instruments = {}
-  const storage = {}
-
   const clients = {}
 
   wss.on('connection', ws => {
@@ -47,7 +43,6 @@ try {
   })
 
   wss.on('connection', function connection (ws) {
-    ws.send(JSON.stringify({ action: 'editor-import', instruments: instruments, rolls: storage }))
     ws.on('message', function message (data) {
       console.log('received: %s', data)
       if (ws.id) {
@@ -97,9 +92,12 @@ try {
           }
         } else if (message.action === 'instrument-remove') {
           if (sessions[ws.id].instruments[message.uuid]) {
-            delete sessions[ws.id].storage[instruments[message.uuid].roll]
+            const roll = sessions[ws.id].instruments[message.uuid].roll
+            delete sessions[ws.id].storage[roll]
             delete sessions[ws.id].instruments[message.uuid]
           }
+        } else if (message.action === 'session-get') {
+          ws.send(JSON.stringify({ action: 'editor-import', instruments: sessions[ws.id].instruments, rolls: sessions[ws.id].storage }))
         }
       }
       console.log(clients)
