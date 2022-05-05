@@ -21,10 +21,10 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "ws": "^8.5.0"
+    "ws": "^8.6.0"
   },
   "devDependencies": {
-    "@lnu/eslint-config": "^1.1.4",
+    "@lnu/eslint-config": "^1.1.5",
     "dotenv": "^16.0.0",
     "nodemon": "^2.0.15"
   },
