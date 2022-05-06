@@ -24,6 +24,7 @@ try {
             clients[message.id].push(ws)
           } else {
             clients[message.id] = []
+            clients[message.id].push(ws)
           }
           // Fetch database session into memory if needed
           if (!sessions[message.id]) {
@@ -42,7 +43,7 @@ try {
         }
       } else if (message.action === 'session-create') {
         const uuid = randomUUID()
-        sessions[uuid] = { password: message.password, instruments: {}, storage: {} }
+        sessions[uuid] = { password: message.password, instruments: {}, rolls: {} }
         const session = new Session({
           id: uuid,
           password: message.password,
@@ -58,6 +59,20 @@ try {
       }
     })
   })
+
+  /**
+   * Save sessions in database.
+   */
+  async function saveSessions () {
+    for (const [id, data] of Object.entries(sessions)) {
+      await Session.findOneAndUpdate({ id: id }, {
+        rolls: JSON.stringify(data.rolls),
+        instruments: JSON.stringify(data.instruments)
+      })
+    }
+  }
+
+  setInterval(saveSessions, 60000)
 
   wss.on('close', (ws) => {
     console.log('connection closed')
@@ -77,14 +92,14 @@ try {
           }
         }
         if (message.action === 'note-create') {
-          if (sessions[ws.id].storage[message.roll]) {
-            sessions[ws.id].storage[message.roll][message.note.uuid] = {
+          if (sessions[ws.id].rolls[message.roll]) {
+            sessions[ws.id].rolls[message.roll][message.note.uuid] = {
               x: message.note.x,
               y: message.note.y,
               length: message.note.length
             }
           } else {
-            sessions[ws.id].storage[message.roll] = {
+            sessions[ws.id].rolls[message.roll] = {
               [message.note.uuid]: {
                 x: message.note.x,
                 y: message.note.y,
@@ -93,17 +108,17 @@ try {
             }
           }
         } else if (message.action === 'note-remove') {
-          if (sessions[ws.id].storage[message.roll][message.note.uuid]) {
-            delete sessions[ws.id].storage[message.roll][message.note.uuid]
+          if (sessions[ws.id].rolls[message.roll][message.note.uuid]) {
+            delete sessions[ws.id].rolls[message.roll][message.note.uuid]
           }
         } else if (message.action === 'note-update') {
           for (const [key, value] of Object.entries(message.changes)) {
             if (key !== 'uuid') {
-              sessions[ws.id].storage[message.roll][message.changes.uuid][key] = value
+              sessions[ws.id].rolls[message.roll][message.changes.uuid][key] = value
             }
           }
         } else if (message.action === 'instrument-create') {
-          sessions[ws.id].storage[message.props.roll] = {}
+          sessions[ws.id].rolls[message.props.roll] = {}
           sessions[ws.id].instruments[message.uuid] = {
             roll: message.props.roll,
             instrument: message.props.instrument
@@ -117,11 +132,11 @@ try {
         } else if (message.action === 'instrument-remove') {
           if (sessions[ws.id].instruments[message.uuid]) {
             const roll = sessions[ws.id].instruments[message.uuid].roll
-            delete sessions[ws.id].storage[roll]
+            delete sessions[ws.id].rolls[roll]
             delete sessions[ws.id].instruments[message.uuid]
           }
         } else if (message.action === 'session-get') {
-          ws.send(JSON.stringify({ action: 'editor-import', instruments: sessions[ws.id].instruments, rolls: sessions[ws.id].storage }))
+          ws.send(JSON.stringify({ action: 'editor-import', instruments: sessions[ws.id].instruments, rolls: sessions[ws.id].rolls }))
         }
       }
       console.log(clients)
