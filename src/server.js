@@ -16,16 +16,22 @@ try {
       const message = JSON.parse(data)
       if (message.action === 'session-auth') {
         console.log(sessions[message.id])
-        // const session = await Session.find(message.id)
-        if (sessions[message.id] && message.password === sessions[message.id].password) {
-          // Antingen en slags sessionslista
-          if (!clients[message.id].includes(ws)) {
+        const session = await Session.findOne({ id: message.id })
+        console.log(session)
+        if (session && session.password === message.password) {
+          // Add the client to an object keeping check of session clients.
+          if (clients[message.id] && !clients[message.id].includes(ws)) {
             clients[message.id].push(ws)
+          } else {
+            clients[message.id] = []
           }
-          // Eller sätta sessions-idt på ws-objektet, eftersom det inte kan ändras från klienten?
-          // Men då kanske man måste iterera mellan alla klienter för att skicka till rätt mottagare?
+          // Fetch database session into memory if needed
+          if (!sessions[message.id]) {
+            sessions[session.id] = { password: session.password, instruments: JSON.parse(session.instruments), rolls: JSON.parse(session.rolls) }
+          }
+          // Add session id to Websocket client object
           ws.id = message.id
-          // Eller både och? Då vet man ju vilken session som ws-objektet är förknippad med.
+          // Send message to confirm that authentication was successful.
           ws.send(JSON.stringify({
             action: 'session-authenticated'
           }))
@@ -65,6 +71,9 @@ try {
         for (const client of clients[ws.id]) {
           if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(message))
+          }
+          if (client.readyState === WebSocket.CLOSED) {
+            // Delete inactive clients.
           }
         }
         if (message.action === 'note-create') {
