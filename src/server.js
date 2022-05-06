@@ -1,17 +1,22 @@
 import WebSocket, { WebSocketServer } from 'ws'
 import { randomUUID } from 'crypto'
+import { connectDB } from './config/mongoose.js'
+import { Session } from './models/session.js'
 
 try {
   const wss = new WebSocketServer({ port: process.env.PORT })
+
+  await connectDB()
 
   const sessions = {}
   const clients = {}
 
   wss.on('connection', ws => {
-    ws.on('message', data => {
+    ws.on('message', async data => {
       const message = JSON.parse(data)
       if (message.action === 'session-auth') {
         console.log(sessions[message.id])
+        // const session = await Session.find(message.id)
         if (sessions[message.id] && message.password === sessions[message.id].password) {
           // Antingen en slags sessionslista
           if (!clients[message.id].includes(ws)) {
@@ -32,6 +37,13 @@ try {
       } else if (message.action === 'session-create') {
         const uuid = randomUUID()
         sessions[uuid] = { password: message.password, instruments: {}, storage: {} }
+        const session = new Session({
+          id: uuid,
+          password: message.password,
+          instruments: JSON.stringify({}),
+          rolls: JSON.stringify({})
+        })
+        await session.save()
         clients[uuid] = []
         ws.id = uuid
         ws.send(JSON.stringify({
@@ -39,6 +51,10 @@ try {
         }))
       }
     })
+  })
+
+  wss.on('close', (ws) => {
+    console.log('connection closed')
   })
 
   wss.on('connection', function connection (ws) {
