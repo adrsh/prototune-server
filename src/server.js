@@ -18,11 +18,11 @@ try {
         const session = await Session.findOne({ id: message.id })
         if (session && session.password === message.password) {
           // Add the client to an object keeping check of session clients.
-          if (clients[message.id] && !clients[message.id].includes(ws)) {
-            clients[message.id].push(ws)
+          if (clients[message.id] && !clients[message.id].has(ws)) {
+            clients[message.id].add(ws)
           } else {
-            clients[message.id] = []
-            clients[message.id].push(ws)
+            clients[message.id] = new Set()
+            clients[message.id].add(ws)
           }
           // Fetch database session into memory if needed
           if (!sessions[message.id]) {
@@ -49,7 +49,7 @@ try {
           rolls: JSON.stringify({})
         })
         await session.save()
-        clients[uuid] = []
+        clients[uuid] = new Set()
         ws.id = uuid
         ws.send(JSON.stringify({
           'session-id': uuid
@@ -71,19 +71,23 @@ try {
   }
 
   // Save active sessions every minute.
-  setInterval(saveSessions, 60000)
+  setInterval(saveSessions, 30000)
 
   /**
    * Remove inactive clients.
    */
   function removeClients () {
-    for (const [id, wsClients] of Object.entries(clients)) {
-      clients[id] = wsClients.filter(client => client.readyState === WebSocket.OPEN)
+    for (const sessionClients of Object.values(clients)) {
+      for (const client of sessionClients.values()) {
+        if (client.readyState === WebSocket.CLOSED) {
+          sessionClients.delete(client)
+        }
+      }
     }
   }
 
   // Save inactive clients every three minutes.
-  setInterval(removeClients, 180000)
+  setInterval(removeClients, 30000)
 
   wss.on('connection', function connection (ws) {
     ws.on('message', function message (data) {
@@ -143,8 +147,8 @@ try {
           ws.send(JSON.stringify({ action: 'editor-import', instruments: sessions[ws.id].instruments, rolls: sessions[ws.id].rolls }))
         }
       }
-      console.log(clients)
-      console.log(sessions)
+      // console.log(clients)
+      // console.log(sessions)
     })
   })
 } catch (err) {
