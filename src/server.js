@@ -71,23 +71,40 @@ try {
   }
 
   // Save active sessions every minute.
-  setInterval(saveSessions, 30000)
+  setInterval(saveSessions, 60000)
 
   /**
    * Remove inactive clients.
    */
-  function removeClients () {
-    for (const sessionClients of Object.values(clients)) {
+  async function removeClients () {
+    for (const [id, sessionClients] of Object.entries(clients)) {
       for (const client of sessionClients.values()) {
         if (client.readyState === WebSocket.CLOSED) {
           sessionClients.delete(client)
         }
       }
+      if (sessionClients.size === 0) {
+        await saveSession(id)
+        delete sessions[id]
+        delete clients[id]
+      }
     }
   }
 
-  // Save inactive clients every three minutes.
+  // Remove inactive clients every thirty seconds.
   setInterval(removeClients, 30000)
+
+  /**
+   * Save a session with a specific id.
+   *
+   * @param {String} id Id of session to save.
+   */
+  async function saveSession (id) {
+    await Session.findOneAndUpdate({ id: id }, {
+      rolls: JSON.stringify(sessions[id].rolls),
+      instruments: JSON.stringify(sessions[id].instruments)
+    })
+  }
 
   wss.on('connection', function connection (ws) {
     ws.on('message', function message (data) {
