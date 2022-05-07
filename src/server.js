@@ -15,9 +15,7 @@ try {
     ws.on('message', async data => {
       const message = JSON.parse(data)
       if (message.action === 'session-auth') {
-        console.log(sessions[message.id])
         const session = await Session.findOne({ id: message.id })
-        console.log(session)
         if (session && session.password === message.password) {
           // Add the client to an object keeping check of session clients.
           if (clients[message.id] && !clients[message.id].includes(ws)) {
@@ -72,11 +70,20 @@ try {
     }
   }
 
+  // Save active sessions every minute.
   setInterval(saveSessions, 60000)
 
-  wss.on('close', (ws) => {
-    console.log('connection closed')
-  })
+  /**
+   * Remove inactive clients.
+   */
+  function removeClients () {
+    for (const [id, wsClients] of Object.entries(clients)) {
+      clients[id] = wsClients.filter(client => client.readyState === WebSocket.OPEN)
+    }
+  }
+
+  // Save inactive clients every three minutes.
+  setInterval(removeClients, 180000)
 
   wss.on('connection', function connection (ws) {
     ws.on('message', function message (data) {
@@ -86,9 +93,6 @@ try {
         for (const client of clients[ws.id]) {
           if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(message))
-          }
-          if (client.readyState === WebSocket.CLOSED) {
-            // Delete inactive clients.
           }
         }
         if (message.action === 'note-create') {
