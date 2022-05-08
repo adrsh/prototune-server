@@ -50,6 +50,7 @@ try {
         })
         await session.save()
         clients[uuid] = new Set()
+        clients[uuid].add(ws)
         ws.id = uuid
         ws.send(JSON.stringify({
           'session-id': uuid
@@ -111,7 +112,7 @@ try {
       console.log('received: %s', data)
       if (ws.id) {
         const message = JSON.parse(data)
-        for (const client of clients[ws.id]) {
+        for (const client of clients[ws.id].values()) {
           if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(message))
           }
