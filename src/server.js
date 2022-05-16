@@ -2,6 +2,7 @@ import WebSocket, { WebSocketServer } from 'ws'
 import { randomUUID } from 'crypto'
 import { connectDB } from './config/mongoose.js'
 import { Session } from './models/session.js'
+import assert from 'assert'
 
 try {
   const wss = new WebSocketServer({ port: process.env.PORT })
@@ -125,12 +126,26 @@ try {
     })
   }
 
+  /**
+   * Validate incoming message.
+   *
+   * @param {Object} message Message to validate.
+   */
+  function validateMessage (message) {
+    console.log(message)
+    if (message.action === 'note-create') {
+      assert(message.note.x >= 0, 'X needs to be greater than 0')
+      assert(message.note.y >= 0, 'Y needs to be greater than 0')
+    }
+  }
+
   wss.on('connection', ws => {
     ws.on('message', data => {
       console.log('received: %s', data)
       if (ws.id) {
         try {
           const message = JSON.parse(data)
+          validateMessage(message)
           for (const client of clients[ws.id].values()) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
               client.send(JSON.stringify(message))
