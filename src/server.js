@@ -172,6 +172,7 @@ try {
           instrument: { type: 'string' },
           volume: { type: 'number', minimum: -60, maximum: 0 },
           reverb: { type: 'number', minimum: 0, maximum: 1 },
+          delay: { type: 'number', minimum: 0, maximum: 1 },
           roll: { type: 'string', format: 'uuid' }
         }
       },
@@ -188,6 +189,7 @@ try {
     ws.on('message', async () => {
       const message = await ws.message
       const valid = validate(message)
+      // console.log(validate.errors)
       if (ws.id && valid) {
         try {
           for (const client of clients[ws.id].values()) {
