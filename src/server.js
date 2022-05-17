@@ -2,6 +2,8 @@ import WebSocket, { WebSocketServer } from 'ws'
 import { randomUUID } from 'crypto'
 import { connectDB } from './config/mongoose.js'
 import { Session } from './models/session.js'
+import Ajv from 'ajv'
+import addFormats from 'ajv-formats'
 
 try {
   const wss = new WebSocketServer({ port: process.env.PORT })
@@ -11,13 +13,25 @@ try {
   const sessions = {}
   const clients = {}
 
+  // Parse incoming message.
+  wss.on('connection', ws => {
+    ws.on('message', async data => {
+      try {
+        // console.log('received: %s', data)
+        ws.message = JSON.parse(data)
+      } catch (error) {
+        console.error('An error occured')
+      }
+    })
+  })
+
   // Handle pings from client.
   wss.on('connection', ws => {
-    ws.on('message', data => {
+    ws.on('message', async () => {
       try {
-        const message = JSON.parse(data)
-        if (message === 'ping' && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify('pong'))
+        const message = await ws.message
+        if (message.action === 'ping' && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ action: 'pong' }))
         }
       } catch (error) {
         console.error('An error occured')
@@ -26,9 +40,9 @@ try {
   })
 
   wss.on('connection', ws => {
-    ws.on('message', async data => {
+    ws.on('message', async () => {
       try {
-        const message = JSON.parse(data)
+        const message = await ws.message
         if (message.action === 'session-auth') {
           const session = await Session.findOne({ id: message.id })
           if (session && session.password === message.password) {
@@ -125,12 +139,57 @@ try {
     })
   }
 
+  const ajv = new Ajv()
+  addFormats(ajv, ['uuid'])
+
+  const schema = {
+    type: 'object',
+    properties: {
+      action: {
+        type: 'string'
+      },
+      note: {
+        type: 'object',
+        properties: {
+          x: { type: 'integer', minimum: 0 },
+          y: { type: 'integer', minimum: 0, maximum: 87 },
+          length: { type: 'integer', minimum: 1 },
+          uuid: { type: 'string', format: 'uuid' }
+        },
+        required: ['uuid']
+      },
+      roll: {
+        type: 'string',
+        format: 'uuid'
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid'
+      },
+      props: {
+        type: 'object',
+        properties: {
+          instrument: { type: 'string' },
+          volume: { type: 'number', minimum: -60, maximum: 0 },
+          reverb: { type: 'number', minimum: 0, maximum: 1 },
+          roll: { type: 'string', format: 'uuid' }
+        }
+      },
+      'keyboard-note': {
+        type: 'integer', minimum: 21, maximum: 108
+      }
+    },
+    required: ['action']
+  }
+
+  const validate = ajv.compile(schema)
+
   wss.on('connection', ws => {
-    ws.on('message', data => {
-      console.log('received: %s', data)
-      if (ws.id) {
+    ws.on('message', async () => {
+      const message = await ws.message
+      const valid = validate(message)
+      if (ws.id && valid) {
         try {
-          const message = JSON.parse(data)
           for (const client of clients[ws.id].values()) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
               client.send(JSON.stringify(message))
@@ -157,17 +216,14 @@ try {
               delete sessions[ws.id].rolls[message.roll][message.note.uuid]
             }
           } else if (message.action === 'note-update') {
-            for (const [key, value] of Object.entries(message.changes)) {
+            for (const [key, value] of Object.entries(message.note)) {
               if (key !== 'uuid') {
-                sessions[ws.id].rolls[message.roll][message.changes.uuid][key] = value
+                sessions[ws.id].rolls[message.roll][message.note.uuid][key] = value
               }
             }
           } else if (message.action === 'instrument-create') {
             sessions[ws.id].rolls[message.props.roll] = {}
-            sessions[ws.id].instruments[message.uuid] = {
-              roll: message.props.roll,
-              instrument: message.props.instrument
-            }
+            sessions[ws.id].instruments[message.uuid] = message.props
           } else if (message.action === 'instrument-update') {
             for (const [key, value] of Object.entries(message.props)) {
               if (key !== 'roll') {
@@ -184,11 +240,9 @@ try {
             ws.send(JSON.stringify({ action: 'editor-import', instruments: sessions[ws.id].instruments, rolls: sessions[ws.id].rolls }))
           }
         } catch (error) {
-          console.error('Message contained invalid data: ' + data)
+          console.error('Message contained invalid data: ' + message)
         }
       }
-      // console.log(clients)
-      // console.log(sessions)
     })
   })
 } catch (err) {
