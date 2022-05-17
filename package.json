@@ -21,6 +21,8 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
+    "ajv": "^8.11.0",
+    "ajv-formats": "^2.1.1",
     "mongoose": "^6.3.2",
     "ws": "^8.6.0"
   },
