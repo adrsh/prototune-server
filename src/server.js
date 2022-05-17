@@ -17,7 +17,7 @@ try {
   wss.on('connection', ws => {
     ws.on('message', async data => {
       try {
-        console.log('received: %s', data)
+        // console.log('received: %s', data)
         ws.message = JSON.parse(data)
       } catch (error) {
         console.error('An error occured')
