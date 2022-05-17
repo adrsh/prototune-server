@@ -188,7 +188,6 @@ try {
     ws.on('message', async () => {
       const message = await ws.message
       const valid = validate(message)
-      console.log(validate.errors)
       if (ws.id && valid) {
         try {
           for (const client of clients[ws.id].values()) {
