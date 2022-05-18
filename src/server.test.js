@@ -368,4 +368,209 @@ test('Note update without note uuid', () => {
   })).toBe(false)
 })
 
+test('Instrument creation with valid attributes', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(true)
+})
+
+test('Instrument creation with volume greater than 0', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: 1,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with volume less than than -60', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -61,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with volume as a string', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: '-5',
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with invalid reverb value', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 2,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with invalid delay value', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: -1
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with invalid instrument value', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 1,
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with unexpected attribute', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0,
+      number: 1
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with invalid roll uuid', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'invaliduuid',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with invalid uuid', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'invaliduuid',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with missing roll uuid', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with missing instrument', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with missing volume', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with missing reverb', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
+test('Instrument creation with missing delay', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0
+    }
+  })).toBe(false)
+})
 
