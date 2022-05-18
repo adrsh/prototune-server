@@ -574,3 +574,104 @@ test('Instrument creation with missing delay', () => {
   })).toBe(false)
 })
 
+test('Instrument removal with valid attributes', () => {
+  expect(validate({
+    action: 'instrument-remove',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(true)
+})
+
+test('Instrument removal with invalid uuid', () => {
+  expect(validate({
+    action: 'instrument-remove',
+    uuid: 'invaliduuid'
+  })).toBe(false)
+})
+
+test('Instrument removal without uuid', () => {
+  expect(validate({
+    action: 'instrument-remove'
+  })).toBe(false)
+})
+
+test('Session get with valid attributes', () => {
+  expect(validate({
+    action: 'session-get'
+  })).toBe(true)
+})
+
+test('Keyboard play with valid attributes', () => {
+  expect(validate({
+    action: 'keyboard-play',
+    'keyboard-note': 60
+  })).toBe(true)
+})
+
+test('Keyboard stop with valid attributes', () => {
+  expect(validate({
+    action: 'keyboard-stop',
+    'keyboard-note': 60
+  })).toBe(true)
+})
+
+test('Keyboard play without keyboard-note', () => {
+  expect(validate({
+    action: 'keyboard-play'
+  })).toBe(false)
+})
+
+test('Keyboard stop without keyboard-note', () => {
+  expect(validate({
+    action: 'keyboard-stop'
+  })).toBe(false)
+})
+
+test('Keyboard play with keyboard-note value less than 21', () => {
+  expect(validate({
+    action: 'keyboard-play',
+    'keyboard-note': 20
+  })).toBe(false)
+})
+
+test('Keyboard play with keyboard-note value greater than 108', () => {
+  expect(validate({
+    action: 'keyboard-play',
+    'keyboard-note': 109
+  })).toBe(false)
+})
+
+test('Keyboard stop with keyboard-note value less than 21', () => {
+  expect(validate({
+    action: 'keyboard-stop',
+    'keyboard-note': 20
+  })).toBe(false)
+})
+
+test('Keyboard stop with keyboard-note value greater than 108', () => {
+  expect(validate({
+    action: 'keyboard-stop',
+    'keyboard-note': 109
+  })).toBe(false)
+})
+
+test('Keyboard play with unexpected properties', () => {
+  expect(validate({
+    action: 'keyboard-play',
+    'keyboard-note': 60,
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Keyboard stop with unexpected properties', () => {
+  expect(validate({
+    action: 'keyboard-stop',
+    'keyboard-note': 60,
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Empty message', () => {
+  expect(validate({})).toBe(false)
+})
+
+
