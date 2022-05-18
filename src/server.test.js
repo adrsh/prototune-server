@@ -1,50 +1,9 @@
+import { schema } from './server.js'
 const Ajv = require('ajv')
 const addFormats = require('ajv-formats')
 
 const ajv = new Ajv()
 addFormats(ajv, ['uuid'])
-
-const schema = {
-  type: 'object',
-  properties: {
-    action: {
-      type: 'string'
-    },
-    note: {
-      type: 'object',
-      properties: {
-        x: { type: 'integer', minimum: 0 },
-        y: { type: 'integer', minimum: 0, maximum: 87 },
-        length: { type: 'integer', minimum: 1 },
-        uuid: { type: 'string', format: 'uuid' }
-      },
-      required: ['uuid']
-    },
-    roll: {
-      type: 'string',
-      format: 'uuid'
-    },
-    uuid: {
-      type: 'string',
-      format: 'uuid'
-    },
-    props: {
-      type: 'object',
-      properties: {
-        instrument: { type: 'string' },
-        volume: { type: 'number', minimum: -60, maximum: 0 },
-        reverb: { type: 'number', minimum: 0, maximum: 1 },
-        delay: { type: 'number', minimum: 0, maximum: 1 },
-        roll: { type: 'string', format: 'uuid' }
-      }
-    },
-    'keyboard-note': {
-      type: 'integer', minimum: 21, maximum: 108
-    }
-  },
-  required: ['action']
-}
-
 const validate = ajv.compile(schema)
 
 test('Note creation with valid attributes', () => {
@@ -674,4 +633,58 @@ test('Empty message', () => {
   expect(validate({})).toBe(false)
 })
 
+test('Session authentication with password', () => {
+  expect(validate({
+    action: 'session-auth',
+    id: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    password: 'hej123'
+  })).toBe(true)
+})
 
+test('Session authentication with empty password', () => {
+  expect(validate({
+    action: 'session-auth',
+    id: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    password: ''
+  })).toBe(true)
+})
+
+test('Session authentication without password', () => {
+  expect(validate({
+    action: 'session-auth',
+    id: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Session authentication without id', () => {
+  expect(validate({
+    action: 'session-auth'
+  })).toBe(false)
+})
+
+test('Session creation with password', () => {
+  expect(validate({
+    action: 'session-create',
+    password: 'hej123'
+  })).toBe(true)
+})
+
+test('Session creation with empty password', () => {
+  expect(validate({
+    action: 'session-create',
+    password: ''
+  })).toBe(true)
+})
+
+test('Session authentication without password', () => {
+  expect(validate({
+    action: 'session-create',
+    id: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Ping message', () => {
+  expect(validate({
+    action: 'ping'
+  })).toBe(true)
+})
