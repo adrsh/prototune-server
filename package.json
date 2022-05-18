@@ -25,13 +25,13 @@
     "ajv": "^8.11.0",
     "ajv-formats": "^2.1.1",
     "jest": "^28.1.0",
-    "mongoose": "^6.3.2",
+    "mongoose": "^6.3.3",
     "ws": "^8.6.0"
   },
   "devDependencies": {
     "@lnu/eslint-config": "^1.1.5",
-    "dotenv": "^16.0.0",
-    "nodemon": "^2.0.15"
+    "dotenv": "^16.0.1",
+    "nodemon": "^2.0.16"
   },
   "eslintConfig": {
     "extends": "@lnu"

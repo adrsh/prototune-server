@@ -10,7 +10,7 @@ const schema = {
     note: {
       type: 'object',
       properties: {
-        x: { type: 'integer', minimum: 0 },
+        x: { type: 'integer', minimum: 0, maximum: 63 },
         y: { type: 'integer', minimum: 0, maximum: 87 },
         length: { type: 'integer', minimum: 1 },
         uuid: { type: 'string', format: 'uuid' }
@@ -727,4 +727,10 @@ test('Ping message', () => {
   expect(validate({
     action: 'ping'
   })).toBe(true)
+})
+
+test('Non existing action', () => {
+  expect(validate({
+    action: 'format-computer'
+  })).toBe(false)
 })
