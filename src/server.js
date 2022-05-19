@@ -4,51 +4,7 @@ import { connectDB } from './config/mongoose.js'
 import { Session } from './models/session.js'
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
-
-export const schema = {
-  type: 'object',
-  properties: {
-    action: {
-      type: 'string',
-      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-create', 'ping']
-    },
-    note: {
-      type: 'object',
-      properties: {
-        x: { type: 'integer', minimum: 0, maximum: 63 },
-        y: { type: 'integer', minimum: 0, maximum: 87 },
-        length: { type: 'integer', minimum: 1 },
-        uuid: { type: 'string', format: 'uuid' }
-      },
-      required: ['uuid']
-    },
-    roll: {
-      type: 'string',
-      format: 'uuid'
-    },
-    uuid: {
-      type: 'string',
-      format: 'uuid'
-    },
-    props: {
-      type: 'object',
-      properties: {
-        instrument: { type: 'string' },
-        volume: { type: 'number', minimum: -60, maximum: 0 },
-        reverb: { type: 'number', minimum: 0, maximum: 1 },
-        delay: { type: 'number', minimum: 0, maximum: 1 },
-        roll: { type: 'string', format: 'uuid' }
-      }
-    },
-    'keyboard-note': {
-      type: 'integer', minimum: 21, maximum: 108
-    },
-    password: {
-      type: 'string'
-    }
-  },
-  required: ['action']
-}
+import schema from './validationSchema.cjs'
 
 try {
   const port = process.env.PORT || 8080
