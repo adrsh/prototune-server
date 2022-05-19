@@ -33,7 +33,10 @@ const schema = {
     props: {
       type: 'object',
       properties: {
-        instrument: { type: 'string' },
+        instrument: {
+          type: 'string',
+          enum: ['piano', 'casio', '808', '909', 'cr78', 'room', 'synth', 'pulse', 'square', 'sine', 'amsynth', 'fmsynth']
+        },
         volume: { type: 'number', minimum: -60, maximum: 0 },
         reverb: { type: 'number', minimum: 0, maximum: 1 },
         delay: { type: 'number', minimum: 0, maximum: 1 },
@@ -63,10 +66,6 @@ const schema = {
         properties: {
           note: {
             required: ['x', 'y', 'length', 'uuid']
-          },
-          roll: {
-            type: 'string',
-            format: 'uuid'
           }
         },
         required: ['roll', 'note']
@@ -84,10 +83,6 @@ const schema = {
         properties: {
           note: {
             required: ['uuid']
-          },
-          roll: {
-            type: 'string',
-            format: 'uuid'
           }
         },
         required: ['roll', 'note']
@@ -105,10 +100,6 @@ const schema = {
         properties: {
           note: {
             required: ['uuid']
-          },
-          roll: {
-            type: 'string',
-            format: 'uuid'
           }
         },
         required: ['roll', 'note']
@@ -126,10 +117,6 @@ const schema = {
         properties: {
           props: {
             required: ['roll', 'instrument', 'volume', 'reverb', 'delay']
-          },
-          uuid: {
-            type: 'string',
-            format: 'uuid'
           }
         },
         required: ['props', 'uuid']
@@ -146,10 +133,6 @@ const schema = {
       then: {
         properties: {
           props: {
-          },
-          uuid: {
-            type: 'string',
-            format: 'uuid'
           }
         },
         required: ['props', 'uuid']
@@ -164,12 +147,6 @@ const schema = {
         }
       },
       then: {
-        properties: {
-          uuid: {
-            type: 'string',
-            format: 'uuid'
-          }
-        },
         required: ['uuid']
       }
     },
