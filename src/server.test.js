@@ -2,58 +2,60 @@ const Ajv = require('ajv/dist/2019')
 const addFormats = require('ajv-formats')
 
 const schema = {
-  type: 'object',
-  properties: {
-    action: {
-      type: 'string',
-      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-update', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-get', 'session-create', 'ping']
-    },
-    note: {
-      type: 'object',
-      properties: {
-        x: { type: 'integer', minimum: 0, maximum: 63 },
-        y: { type: 'integer', minimum: 0, maximum: 87 },
-        length: { type: 'integer', minimum: 1 },
-        uuid: { type: 'string', format: 'uuid' }
-      },
-      additionalProperties: false
-    },
-    roll: {
-      type: 'string',
-      format: 'uuid'
-    },
-    uuid: {
-      type: 'string',
-      format: 'uuid'
-    },
-    id: {
-      type: 'string',
-      format: 'uuid'
-    },
-    props: {
-      type: 'object',
-      properties: {
-        instrument: {
-          type: 'string',
-          enum: ['piano', 'casio', '808', '909', 'cr78', 'room', 'synth', 'pulse', 'square', 'sine', 'amsynth', 'fmsynth']
-        },
-        volume: { type: 'number', minimum: -60, maximum: 0 },
-        reverb: { type: 'number', minimum: 0, maximum: 1 },
-        delay: { type: 'number', minimum: 0, maximum: 1 },
-        roll: { type: 'string', format: 'uuid' }
-      },
-      additionalProperties: false
-    },
-    'keyboard-note': {
-      type: 'integer', minimum: 21, maximum: 108
-    },
-    password: {
-      type: 'string',
-      maxLength: 64
-    }
-  },
-  additionalProperties: false,
   allOf: [
+    {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-update', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-get', 'session-create', 'ping']
+        },
+        note: {
+          type: 'object',
+          properties: {
+            x: { type: 'integer', minimum: 0, maximum: 63 },
+            y: { type: 'integer', minimum: 0, maximum: 87 },
+            length: { type: 'integer', minimum: 1 },
+            uuid: { type: 'string', format: 'uuid' }
+          },
+          additionalProperties: false
+        },
+        roll: {
+          type: 'string',
+          format: 'uuid'
+        },
+        uuid: {
+          type: 'string',
+          format: 'uuid'
+        },
+        id: {
+          type: 'string',
+          format: 'uuid'
+        },
+        props: {
+          type: 'object',
+          properties: {
+            instrument: {
+              type: 'string',
+              enum: ['piano', 'casio', '808', '909', 'cr78', 'room', 'synth', 'pulse', 'square', 'sine', 'amsynth', 'fmsynth']
+            },
+            volume: { type: 'number', minimum: -60, maximum: 0 },
+            reverb: { type: 'number', minimum: 0, maximum: 1 },
+            delay: { type: 'number', minimum: 0, maximum: 1 },
+            roll: { type: 'string', format: 'uuid' }
+          },
+          additionalProperties: false,
+          minProperties: 1
+        },
+        'keyboard-note': {
+          type: 'integer', minimum: 21, maximum: 108
+        },
+        password: {
+          type: 'string',
+          maxLength: 64
+        }
+      }
+    },
     {
       if: {
         properties: {
@@ -66,9 +68,12 @@ const schema = {
         properties: {
           note: {
             required: ['x', 'y', 'length', 'uuid']
-          }
+          },
+          roll: true,
+          action: true
         },
-        required: ['roll', 'note']
+        required: ['action', 'roll', 'note'],
+        additionalProperties: false
       }
     },
     {
@@ -99,10 +104,17 @@ const schema = {
       then: {
         properties: {
           note: {
-            required: ['uuid']
-          }
+            properties: {
+              uuid: true
+            },
+            required: ['uuid'],
+            additionalProperties: false
+          },
+          roll: true,
+          action: true
         },
-        required: ['roll', 'note']
+        required: ['action', 'roll', 'note'],
+        additionalProperties: false
       }
     },
     {
@@ -117,9 +129,12 @@ const schema = {
         properties: {
           props: {
             required: ['roll', 'instrument', 'volume', 'reverb', 'delay']
-          }
+          },
+          action: true,
+          uuid: true
         },
-        required: ['props', 'uuid']
+        required: ['action', 'props', 'uuid'],
+        additionalProperties: false
       }
     },
     {
@@ -133,9 +148,15 @@ const schema = {
       then: {
         properties: {
           props: {
-          }
+            properties: {
+              roll: false
+            }
+          },
+          action: true,
+          uuid: true
         },
-        required: ['props', 'uuid']
+        required: ['action', 'props', 'uuid'],
+        additionalProperties: false
       }
     },
     {
@@ -159,7 +180,12 @@ const schema = {
         }
       },
       then: {
-        required: ['keyboard-note']
+        properties: {
+          action: true,
+          'keyboard-note': true
+        },
+        required: ['action', 'keyboard-note'],
+        additionalProperties: false
       }
     },
     {
@@ -167,11 +193,17 @@ const schema = {
         properties: {
           action: {
             const: 'keyboard-stop'
-          }
+          },
+          'keyboard-note': true
         }
       },
       then: {
-        required: ['keyboard-note']
+        properties: {
+          action: true,
+          'keyboard-note': true
+        },
+        required: ['action', 'keyboard-note'],
+        additionalProperties: false
       }
     },
     {
@@ -204,12 +236,6 @@ const schema = {
 const ajv = new Ajv()
 addFormats(ajv, ['uuid'])
 const validate = ajv.compile(schema)
-
-afterEach(() => {
-  if (validate.errors) {
-    console.log(validate.errors)
-  }
-})
 
 test('Note creation with valid attributes', () => {
   expect(validate({
@@ -399,6 +425,14 @@ test('Note creation with unexpected extra values inside note', () => {
       z: 0,
       uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
     },
+    roll: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Note creation with empty note', () => {
+  expect(validate({
+    action: 'note-create',
+    note: {},
     roll: 'efa2765b-dfe0-4476-8220-e70b706421e7'
   })).toBe(false)
 })
