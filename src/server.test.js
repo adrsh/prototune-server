@@ -1,13 +1,12 @@
 const Ajv = require('ajv/dist/2019')
 const addFormats = require('ajv-formats')
-const { validatePropertyDeps } = require('ajv/dist/vocabularies/applicator/dependencies')
 
 const schema = {
   type: 'object',
   properties: {
     action: {
       type: 'string',
-      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-update', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-create', 'ping']
+      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-update', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-get', 'session-create', 'ping']
     },
     note: {
       type: 'object',
@@ -27,6 +26,10 @@ const schema = {
       type: 'string',
       format: 'uuid'
     },
+    id: {
+      type: 'string',
+      format: 'uuid'
+    },
     props: {
       type: 'object',
       properties: {
@@ -40,6 +43,10 @@ const schema = {
     },
     'keyboard-note': {
       type: 'integer', minimum: 21, maximum: 108
+    },
+    password: {
+      type: 'string',
+      maxLength: 64
     }
   },
   additionalProperties: false,
@@ -118,7 +125,7 @@ const schema = {
       then: {
         properties: {
           props: {
-            required: ['uuid', 'instrument', 'volume', 'reverb', 'delay']
+            required: ['roll', 'instrument', 'volume', 'reverb', 'delay']
           },
           uuid: {
             type: 'string',
@@ -146,6 +153,72 @@ const schema = {
           }
         },
         required: ['props', 'uuid']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'instrument-remove'
+          }
+        }
+      },
+      then: {
+        properties: {
+          uuid: {
+            type: 'string',
+            format: 'uuid'
+          }
+        },
+        required: ['uuid']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'keyboard-play'
+          }
+        }
+      },
+      then: {
+        required: ['keyboard-note']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'keyboard-stop'
+          }
+        }
+      },
+      then: {
+        required: ['keyboard-note']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'session-auth'
+          }
+        }
+      },
+      then: {
+        required: ['id', 'password']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'session-create'
+          }
+        }
+      },
+      then: {
+        required: ['password']
       }
     }
   ]
@@ -794,11 +867,27 @@ test('Instrument updating with unexpected property', () => {
   })).toBe(false)
 })
 
-test('Instrument updating with nothing', () => {
+test('Instrument updating with empty props', () => {
   expect(validate({
     action: 'instrument-update',
     uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
     props: {}
+  })).toBe(false)
+})
+
+test('Instrument updating with no props', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Instrument updating with no uuid', () => {
+  expect(validate({
+    action: 'instrument-update',
+    props: {
+      instrument: 'piano'
+    }
   })).toBe(false)
 })
 
@@ -954,8 +1043,7 @@ test('Session creation with empty password', () => {
 
 test('Session authentication without password', () => {
   expect(validate({
-    action: 'session-create',
-    id: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+    action: 'session-create'
   })).toBe(false)
 })
 
@@ -974,4 +1062,3 @@ test('Non existing action', () => {
 test('Empty message', () => {
   expect(validate({})).toBe(false)
 })
-
