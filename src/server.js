@@ -9,7 +9,8 @@ export const schema = {
   type: 'object',
   properties: {
     action: {
-      type: 'string'
+      type: 'string',
+      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-create', 'ping']
     },
     note: {
       type: 'object',
@@ -41,6 +42,9 @@ export const schema = {
     },
     'keyboard-note': {
       type: 'integer', minimum: 21, maximum: 108
+    },
+    password: {
+      type: 'string'
     }
   },
   required: ['action']

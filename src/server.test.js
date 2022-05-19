@@ -1,11 +1,12 @@
-const Ajv = require('ajv')
+const Ajv = require('ajv/dist/2019')
 const addFormats = require('ajv-formats')
 
 const schema = {
   type: 'object',
   properties: {
     action: {
-      type: 'string'
+      type: 'string',
+      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-create', 'ping']
     },
     note: {
       type: 'object',
@@ -15,7 +16,7 @@ const schema = {
         length: { type: 'integer', minimum: 1 },
         uuid: { type: 'string', format: 'uuid' }
       },
-      required: ['uuid']
+      additionalProperties: false
     },
     roll: {
       type: 'string',
@@ -33,13 +34,100 @@ const schema = {
         reverb: { type: 'number', minimum: 0, maximum: 1 },
         delay: { type: 'number', minimum: 0, maximum: 1 },
         roll: { type: 'string', format: 'uuid' }
-      }
+      },
+      additionalProperties: false
     },
     'keyboard-note': {
       type: 'integer', minimum: 21, maximum: 108
     }
   },
-  required: ['action']
+  additionalProperties: false,
+  allOf: [
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'note-create'
+          }
+        }
+      },
+      then: {
+        properties: {
+          note: {
+            required: ['x', 'y', 'length', 'uuid']
+          },
+          roll: {
+            type: 'string',
+            format: 'uuid'
+          }
+        },
+        required: ['roll', 'note']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'note-update'
+          }
+        }
+      },
+      then: {
+        properties: {
+          note: {
+            required: ['uuid']
+          },
+          roll: {
+            type: 'string',
+            format: 'uuid'
+          }
+        },
+        required: ['roll', 'note']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'note-remove'
+          }
+        }
+      },
+      then: {
+        properties: {
+          note: {
+            required: ['uuid']
+          },
+          roll: {
+            type: 'string',
+            format: 'uuid'
+          }
+        },
+        required: ['roll', 'note']
+      }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'instrument-create'
+          }
+        }
+      },
+      then: {
+        properties: {
+          props: {
+            required: ['uuid', 'instrument', 'volume', 'reverb', 'delay']
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid'
+          }
+        },
+        required: ['props', 'uuid']
+      }
+    }
+  ]
 }
 
 const ajv = new Ajv()
@@ -339,6 +427,34 @@ test('Note update with only length value', () => {
   })).toBe(true)
 })
 
+test('Note update with unexpected value', () => {
+  expect(validate({
+    action: 'note-update',
+    note: {
+      z: 1,
+      uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+    },
+    roll: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Note update with unexpected value (props)', () => {
+  expect(validate({
+    action: 'note-update',
+    note: {
+      x: 1,
+      uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+    },
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(false)
+})
+
 test('Note update without roll uuid', () => {
   expect(validate({
     action: 'note-update',
@@ -474,6 +590,21 @@ test('Instrument creation with unexpected attribute', () => {
       instrument: 'piano',
       volume: -5,
       reverb: 0,
+      delay: 0
+    },
+    roll: 'efa2765b-dfe0-4476-8220-e70b706421e7'
+  })).toBe(false)
+})
+
+test('Instrument creation with unexpected attribute inside props', () => {
+  expect(validate({
+    action: 'instrument-create',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
       delay: 0,
       number: 1
     }
@@ -593,12 +724,6 @@ test('Instrument removal without uuid', () => {
   })).toBe(false)
 })
 
-test('Session get with valid attributes', () => {
-  expect(validate({
-    action: 'session-get'
-  })).toBe(true)
-})
-
 test('Keyboard play with valid attributes', () => {
   expect(validate({
     action: 'keyboard-play',
@@ -669,8 +794,10 @@ test('Keyboard stop with unexpected properties', () => {
   })).toBe(false)
 })
 
-test('Empty message', () => {
-  expect(validate({})).toBe(false)
+test('Session get with valid attributes', () => {
+  expect(validate({
+    action: 'session-get'
+  })).toBe(true)
 })
 
 test('Session authentication with password', () => {
@@ -733,4 +860,8 @@ test('Non existing action', () => {
   expect(validate({
     action: 'format-computer'
   })).toBe(false)
+})
+
+test('Empty message', () => {
+  expect(validate({})).toBe(false)
 })
