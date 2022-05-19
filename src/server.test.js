@@ -1,12 +1,13 @@
 const Ajv = require('ajv/dist/2019')
 const addFormats = require('ajv-formats')
+const { validatePropertyDeps } = require('ajv/dist/vocabularies/applicator/dependencies')
 
 const schema = {
   type: 'object',
   properties: {
     action: {
       type: 'string',
-      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-create', 'ping']
+      enum: ['note-create', 'note-update', 'note-remove', 'instrument-create', 'instrument-update', 'instrument-remove', 'keyboard-play', 'keyboard-stop', 'session-auth', 'session-create', 'ping']
     },
     note: {
       type: 'object',
@@ -126,6 +127,26 @@ const schema = {
         },
         required: ['props', 'uuid']
       }
+    },
+    {
+      if: {
+        properties: {
+          action: {
+            const: 'instrument-update'
+          }
+        }
+      },
+      then: {
+        properties: {
+          props: {
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid'
+          }
+        },
+        required: ['props', 'uuid']
+      }
     }
   ]
 }
@@ -133,6 +154,12 @@ const schema = {
 const ajv = new Ajv()
 addFormats(ajv, ['uuid'])
 const validate = ajv.compile(schema)
+
+afterEach(() => {
+  if (validate.errors) {
+    console.log(validate.errors)
+  }
+})
 
 test('Note creation with valid attributes', () => {
   expect(validate({
@@ -704,6 +731,88 @@ test('Instrument creation with missing delay', () => {
   })).toBe(false)
 })
 
+test('Instrument updating with valid attributes', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      instrument: 'piano',
+      volume: -5,
+      reverb: 0,
+      delay: 0
+    }
+  })).toBe(true)
+})
+
+test('Instrument updating with only instrument', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      instrument: 'piano'
+    }
+  })).toBe(true)
+})
+
+test('Instrument updating with only volume', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      volume: -8
+    }
+  })).toBe(true)
+})
+
+test('Instrument updating with only reverb', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      reverb: 0.1
+    }
+  })).toBe(true)
+})
+
+test('Instrument updating with only delay', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      delay: 0.2
+    }
+  })).toBe(true)
+})
+
+test('Instrument updating with unexpected property', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      color: 'green'
+    }
+  })).toBe(false)
+})
+
+test('Instrument updating with nothing', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {}
+  })).toBe(false)
+})
+
+test('Instrument updating with unexpected roll value', () => {
+  expect(validate({
+    action: 'instrument-update',
+    uuid: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+    props: {
+      roll: 'efa2765b-dfe0-4476-8220-e70b706421e7',
+      delay: 0.2
+    }
+  })).toBe(false)
+})
+
 test('Instrument removal with valid attributes', () => {
   expect(validate({
     action: 'instrument-remove',
@@ -865,3 +974,4 @@ test('Non existing action', () => {
 test('Empty message', () => {
   expect(validate({})).toBe(false)
 })
+
