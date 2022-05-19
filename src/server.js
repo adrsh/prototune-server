@@ -4,9 +4,11 @@ import { connectDB } from './config/mongoose.js'
 import { Session } from './models/session.js'
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
+import schema from './validationSchema.cjs'
 
 try {
-  const wss = new WebSocketServer({ port: process.env.PORT })
+  const port = process.env.PORT || 8080
+  const wss = new WebSocketServer({ port: port })
 
   await connectDB()
 
@@ -141,48 +143,6 @@ try {
 
   const ajv = new Ajv()
   addFormats(ajv, ['uuid'])
-
-  const schema = {
-    type: 'object',
-    properties: {
-      action: {
-        type: 'string'
-      },
-      note: {
-        type: 'object',
-        properties: {
-          x: { type: 'integer', minimum: 0 },
-          y: { type: 'integer', minimum: 0, maximum: 87 },
-          length: { type: 'integer', minimum: 1 },
-          uuid: { type: 'string', format: 'uuid' }
-        },
-        required: ['uuid']
-      },
-      roll: {
-        type: 'string',
-        format: 'uuid'
-      },
-      uuid: {
-        type: 'string',
-        format: 'uuid'
-      },
-      props: {
-        type: 'object',
-        properties: {
-          instrument: { type: 'string' },
-          volume: { type: 'number', minimum: -60, maximum: 0 },
-          reverb: { type: 'number', minimum: 0, maximum: 1 },
-          delay: { type: 'number', minimum: 0, maximum: 1 },
-          roll: { type: 'string', format: 'uuid' }
-        }
-      },
-      'keyboard-note': {
-        type: 'integer', minimum: 21, maximum: 108
-      }
-    },
-    required: ['action']
-  }
-
   const validate = ajv.compile(schema)
 
   wss.on('connection', ws => {
@@ -243,6 +203,7 @@ try {
           }
         } catch (error) {
           console.error('Message contained invalid data: ' + message)
+          console.error(validate.errors)
         }
       }
     })
