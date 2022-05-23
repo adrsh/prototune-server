@@ -55,6 +55,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'note-create'
@@ -62,8 +63,10 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           note: {
+            type: 'object',
             required: ['x', 'y', 'length', 'uuid']
           },
           roll: true,
@@ -75,6 +78,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'note-update'
@@ -82,8 +86,10 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           note: {
+            type: 'object',
             required: ['uuid']
           }
         },
@@ -92,6 +98,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'note-remove'
@@ -99,8 +106,10 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           note: {
+            type: 'object',
             properties: {
               uuid: true
             },
@@ -116,6 +125,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'instrument-create'
@@ -123,8 +133,10 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           props: {
+            type: 'object',
             required: ['roll', 'instrument', 'volume', 'reverb', 'delay']
           },
           action: true,
@@ -136,6 +148,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'instrument-update'
@@ -143,8 +156,10 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           props: {
+            type: 'object',
             properties: {
               roll: false
             }
@@ -158,6 +173,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'instrument-remove'
@@ -165,11 +181,13 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         required: ['uuid']
       }
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'keyboard-play'
@@ -177,6 +195,7 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           action: true,
           'keyboard-note': true
@@ -187,6 +206,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'keyboard-stop'
@@ -195,6 +215,7 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         properties: {
           action: true,
           'keyboard-note': true
@@ -205,6 +226,7 @@ const schema = {
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'session-auth'
@@ -212,11 +234,13 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         required: ['id', 'password']
       }
     },
     {
       if: {
+        type: 'object',
         properties: {
           action: {
             const: 'session-create'
@@ -224,6 +248,7 @@ const schema = {
         }
       },
       then: {
+        type: 'object',
         required: ['password']
       }
     }
