@@ -31,8 +31,8 @@ try {
           if (message.action === 'ping' && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ action: 'pong' }))
           } else if (message.action === 'session-auth') {
-            const session = await Session.findOne({ id: message.id })
-            if (session && session.password === message.password) {
+            const session = await Session.authenticate(message.id, message.password)
+            if (session) {
               // Add the client to an object keeping check of session clients.
               if (clients[message.id] && !clients[message.id].has(ws)) {
                 clients[message.id].add(ws)
@@ -42,7 +42,7 @@ try {
               }
               // Fetch database session into memory if needed
               if (!sessions[message.id]) {
-                sessions[session.id] = { password: session.password, instruments: JSON.parse(session.instruments), rolls: JSON.parse(session.rolls) }
+                sessions[session.id] = { instruments: JSON.parse(session.instruments), rolls: JSON.parse(session.rolls) }
               }
               // Add session id to Websocket client object
               ws.id = message.id
