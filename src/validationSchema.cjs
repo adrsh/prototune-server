@@ -34,7 +34,7 @@ const schema = {
           properties: {
             instrument: {
               type: 'string',
-              enum: ['piano', 'casio', '808', '909', 'cr78', 'room', 'bedroom', 'synth', 'pulse', 'square', 'sine', 'triangle', 'sawtooth']
+              enum: ['piano', 'casio', 'clarinet', '808', '909', 'cr78', 'room', 'bedroom', 'synth', 'pulse', 'square', 'sine', 'triangle', 'sawtooth']
             },
             volume: { type: 'number', minimum: -60, maximum: 0 },
             reverb: { type: 'number', minimum: 0, maximum: 1 },
