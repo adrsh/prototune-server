@@ -31,26 +31,28 @@ try {
           if (message.action === 'ping' && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ action: 'pong' }))
           } else if (message.action === 'session-auth') {
-            const session = await Session.authenticate(message.id, message.password)
-            if (session) {
-              // Add the client to an object keeping check of session clients.
-              if (clients[message.id] && !clients[message.id].has(ws)) {
-                clients[message.id].add(ws)
-              } else {
-                clients[message.id] = new Set()
-                clients[message.id].add(ws)
+            try {
+              const session = await Session.authenticate(message.id, message.password)
+              if (session) {
+                // Add the client to an object keeping check of session clients.
+                if (clients[message.id] && !clients[message.id].has(ws)) {
+                  clients[message.id].add(ws)
+                } else {
+                  clients[message.id] = new Set()
+                  clients[message.id].add(ws)
+                }
+                // Fetch database session into memory if needed
+                if (!sessions[message.id]) {
+                  sessions[session.id] = { instruments: JSON.parse(session.instruments), rolls: JSON.parse(session.rolls) }
+                }
+                // Add session id to Websocket client object
+                ws.id = message.id
+                // Send message to confirm that authentication was successful.
+                ws.send(JSON.stringify({
+                  action: 'session-authenticated'
+                }))
               }
-              // Fetch database session into memory if needed
-              if (!sessions[message.id]) {
-                sessions[session.id] = { instruments: JSON.parse(session.instruments), rolls: JSON.parse(session.rolls) }
-              }
-              // Add session id to Websocket client object
-              ws.id = message.id
-              // Send message to confirm that authentication was successful.
-              ws.send(JSON.stringify({
-                action: 'session-authenticated'
-              }))
-            } else {
+            } catch {
               ws.send(JSON.stringify({
                 message: 'authentication-failed'
               }))
