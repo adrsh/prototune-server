@@ -52,7 +52,7 @@ try {
                   action: 'session-authenticated'
                 }))
               }
-            } catch {
+            } catch (error) {
               ws.send(JSON.stringify({
                 message: 'authentication-failed'
               }))
