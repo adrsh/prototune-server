@@ -39,7 +39,8 @@ const schema = {
             volume: { type: 'number', minimum: -60, maximum: 0 },
             reverb: { type: 'number', minimum: 0, maximum: 1 },
             delay: { type: 'number', minimum: 0, maximum: 1 },
-            roll: { type: 'string', format: 'uuid' }
+            roll: { type: 'string', format: 'uuid' },
+            transpose: { type: 'number', minimum: -12, maximum: 12}
           },
           additionalProperties: false,
           minProperties: 1
