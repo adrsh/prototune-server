@@ -40,7 +40,7 @@ const schema = {
             reverb: { type: 'number', minimum: 0, maximum: 1 },
             delay: { type: 'number', minimum: 0, maximum: 1 },
             roll: { type: 'string', format: 'uuid' },
-            transpose: { type: 'number', minimum: -12, maximum: 12}
+            transpose: { type: 'number', minimum: -12, maximum: 12 }
           },
           additionalProperties: false,
           minProperties: 1
