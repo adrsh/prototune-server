@@ -34,12 +34,13 @@ const schema = {
           properties: {
             instrument: {
               type: 'string',
-              enum: ['piano', 'casio', 'clarinet', '808', '909', 'cr78', 'room', 'bedroom', 'synth', 'pulse', 'square', 'sine', 'triangle', 'sawtooth']
+              enum: ['piano', 'casio', 'clarinet', '808', '909', 'cr78', 'room', 'bedroom', 'synth', 'pulse', 'square', 'sine', 'triangle', 'sawtooth', 'monopulse', 'monosquare', 'monosine', 'monotriangle', 'monosawtooth']
             },
             volume: { type: 'number', minimum: -60, maximum: 0 },
             reverb: { type: 'number', minimum: 0, maximum: 1 },
             delay: { type: 'number', minimum: 0, maximum: 1 },
-            roll: { type: 'string', format: 'uuid' }
+            roll: { type: 'string', format: 'uuid' },
+            transpose: { type: 'number', minimum: -12, maximum: 12 }
           },
           additionalProperties: false,
           minProperties: 1

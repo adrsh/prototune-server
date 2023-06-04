@@ -23,7 +23,7 @@ try {
   wss.on('connection', ws => {
     ws.on('message', async data => {
       try {
-        // console.log('received: %s', data)
+        console.log('received: %s', data)
         const message = await JSON.parse(data)
         const valid = validate(message)
         if (valid) {
@@ -52,7 +52,7 @@ try {
                   action: 'session-authenticated'
                 }))
               }
-            } catch {
+            } catch (error) {
               ws.send(JSON.stringify({
                 message: 'authentication-failed'
               }))
